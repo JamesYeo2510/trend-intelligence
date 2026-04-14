@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #0c0c0e;
+  --bg-card: #111114;
+  --bg-card-hover: #16161a;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-elite: rgba(251, 191, 36, 0.25);
+}
+
+@theme inline {
+  --color-background: var(--bg-base);
+  --color-foreground: #e4e4e7;
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg-base);
+  color: #e4e4e7;
+  font-family: var(--font-geist-sans), Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Matte card surface */
+.card-matte {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+.card-matte:hover {
+  background: var(--bg-card-hover);
+}
+.card-matte.elite {
+  border-color: var(--border-elite);
+}
+
+/* Subtle noise texture overlay */
+.noise::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Amber glow on elite cards */
+.glow-elite {
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.15), 0 4px 24px rgba(251, 191, 36, 0.06);
+}

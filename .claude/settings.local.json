@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp:*)",
+      "Bash(node:*)",
+      "Bash(vercel --version)",
+      "Bash(vercel deploy:*)",
+      "Bash(vercel logs:*)",
+      "Bash(vercel inspect:*)",
+      "Bash(curl:*)",
+      "Bash(vercel env:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "carl-mcp"
+  ]
+}
