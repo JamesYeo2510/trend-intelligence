@@ -12,7 +12,28 @@ interface ExtractedTrend {
   score: number;
 }
 
-export async function POST() {
+function readCronSecret(request: Request): string | null {
+  const bearer = request.headers.get('authorization')?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim();
+  return (
+    bearer ??
+    request.headers.get('x-cron-secret')?.trim() ??
+    request.headers.get('cron_secret')?.trim() ??
+    null
+  );
+}
+
+function isAuthorizedCronRequest(request: Request): boolean {
+  const expected = process.env.CRON_SECRET?.trim();
+  if (!expected) return true;
+
+  return readCronSecret(request) === expected;
+}
+
+export async function POST(request: Request) {
+  if (!isAuthorizedCronRequest(request)) {
+    return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   try {
     await initSchema();
 
@@ -26,7 +47,7 @@ export async function POST() {
       .filter((t) => t.type === 'website')
       .map((t) => t.value);
 
-    const [tweets, pages] = await Promise.all([
+    const [tweetResult, pageResult] = await Promise.allSettled([
       twitterHandles.length > 0
         ? scrapeTwitterAccounts(twitterHandles)
         : Promise.resolve([]),
@@ -34,6 +55,22 @@ export async function POST() {
         ? scrapeWebsites(websiteUrls)
         : Promise.resolve([]),
     ]);
+
+    const scrapeErrors: string[] = [];
+    const tweets = tweetResult.status === 'fulfilled' ? tweetResult.value : [];
+    const pages = pageResult.status === 'fulfilled' ? pageResult.value : [];
+
+    if (tweetResult.status === 'rejected') {
+      scrapeErrors.push(
+        `x: ${tweetResult.reason instanceof Error ? tweetResult.reason.message : 'Unknown error'}`
+      );
+    }
+
+    if (pageResult.status === 'rejected') {
+      scrapeErrors.push(
+        `websites: ${pageResult.reason instanceof Error ? pageResult.reason.message : 'Unknown error'}`
+      );
+    }
 
     const tweetContext = tweets
       .map((t) => `@${t.author}: ${t.text}${t.url ? ` (${t.url})` : ''}`)
@@ -113,6 +150,7 @@ ${webContext || '(none)'}`,
         tweets_scraped: tweets.length,
         pages_scraped: pages.length,
       },
+      scrape_errors: scrapeErrors,
       trends_extracted: trends.length,
       trends_inserted: inserted,
     });
