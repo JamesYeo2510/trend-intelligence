@@ -253,7 +253,8 @@ function GitHubRadarTab({ repos }: { repos: GitHubRadarItem[] }) {
   const topRepos = useMemo(() => {
     const latestScrape = repos[0]?.scraped_at
     const latestRepos = latestScrape ? repos.filter((repo) => repo.scraped_at === latestScrape) : repos
-    return [...latestRepos].sort((a, b) => (b.stars ?? 0) - (a.stars ?? 0)).slice(0, 10)
+    const radarRepos = latestRepos.filter((repo) => repo.is_ai_dev)
+    return [...(radarRepos.length > 0 ? radarRepos : latestRepos)].sort((a, b) => (b.stars ?? 0) - (a.stars ?? 0))
   }, [repos])
 
   return (
