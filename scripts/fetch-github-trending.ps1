@@ -47,6 +47,7 @@ function Get-LocalEnvValue {
             if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
                 $value = $value.Substring(1, $value.Length - 2)
             }
+            $value = $value.Trim([char]0xFEFF).Trim()
             return $value
         }
     }

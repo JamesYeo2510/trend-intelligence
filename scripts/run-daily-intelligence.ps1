@@ -34,6 +34,7 @@ function Get-LocalEnvValue {
             if (($value.StartsWith('"') -and $value.EndsWith('"')) -or ($value.StartsWith("'") -and $value.EndsWith("'"))) {
                 $value = $value.Substring(1, $value.Length - 2)
             }
+            $value = $value.Trim([char]0xFEFF).Trim()
             return $value
         }
     }
@@ -50,21 +51,21 @@ if ([string]::IsNullOrWhiteSpace($cronSecret)) {
     throw "CRON_SECRET is required to run the protected production scrape endpoints."
 }
 
-$jobs = @(
-    Start-Job -Name "github-intelligence" -ArgumentList $GitHubScript, $ProjectDir -ScriptBlock {
-        param($ScriptPath, $ProjectDir)
-        powershell.exe -NoProfile -ExecutionPolicy Bypass -File $ScriptPath -ProjectDir $ProjectDir
-    },
-    Start-Job -Name "target-scrape" -ArgumentList $ScrapeUrl, $cronSecret -ScriptBlock {
-        param($Url, $Secret)
-        $headers = @{
-            Authorization = "Bearer $Secret"
-            "x-cron-secret" = $Secret
-        }
+$jobs = @()
+$jobs += Start-Job -Name "github-intelligence" -ArgumentList $GitHubScript, $ProjectDir -ScriptBlock {
+    param($ScriptPath, $ProjectDir)
+    powershell.exe -NoProfile -ExecutionPolicy Bypass -File $ScriptPath -ProjectDir $ProjectDir
+}
 
-        Invoke-RestMethod -Uri $Url -Method Post -Headers $headers -ContentType "application/json" -Body "{}" -TimeoutSec 600
+$jobs += Start-Job -Name "target-scrape" -ArgumentList $ScrapeUrl, $cronSecret -ScriptBlock {
+    param($Url, $Secret)
+    $headers = @{
+        Authorization = "Bearer $Secret"
+        "x-cron-secret" = $Secret
     }
-)
+
+    Invoke-RestMethod -Uri $Url -Method Post -Headers $headers -ContentType "application/json" -Body "{}" -TimeoutSec 600
+}
 
 $completed = Wait-Job -Job $jobs -Timeout $TimeoutSeconds
 $timedOut = @($jobs | Where-Object { $_.State -eq "Running" })
