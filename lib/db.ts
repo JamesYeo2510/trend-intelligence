@@ -42,6 +42,16 @@ export type GitHubIntelligence = {
   scraped_at: string;
 };
 
+export type ContentVault = {
+  id: number;
+  source_id: string;
+  content_type: 'linkedin' | 'ig_carousel' | 'blog';
+  title: string;
+  generated_content: unknown;
+  status: 'draft' | 'published';
+  created_at: string;
+};
+
 export async function initSchema() {
   await sql`
     CREATE TABLE IF NOT EXISTS trends (
@@ -84,6 +94,23 @@ export async function initSchema() {
       period TEXT CHECK (period IN ('weekly', 'monthly')),
       marketing_angle TEXT,
       scraped_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  // Drop orphaned sequence if it exists without an owning table (from a partial previous run)
+  try {
+    await sql`DROP SEQUENCE IF EXISTS content_vault_id_seq`;
+  } catch {
+    // Sequence is owned by an existing table — IF NOT EXISTS below will no-op safely
+  }
+  await sql`
+    CREATE TABLE IF NOT EXISTS content_vault (
+      id SERIAL PRIMARY KEY,
+      source_id TEXT NOT NULL,
+      content_type TEXT NOT NULL CHECK (content_type IN ('linkedin', 'ig_carousel', 'blog')),
+      title TEXT NOT NULL,
+      generated_content JSONB NOT NULL,
+      status TEXT DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+      created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
 }

@@ -1,15 +1,38 @@
 'use client'
 
-import { useState, useOptimistic, useTransition } from 'react'
+import { useEffect, useOptimistic, useRef, useState, useTransition } from 'react'
 import {
-  Globe, X, Crown, ChevronUp, ChevronDown,
-  ExternalLink, ChevronRight, Sparkles, ImageIcon,
-  Pencil, Copy, Check, Loader2,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+  Copy,
+  Crown,
+  ExternalLink,
+  Globe,
+  ImageIcon,
+  Loader2,
+  Sparkles,
+  X,
 } from 'lucide-react'
-import { updateManualRating, generateTrendImage, generateLinkedInDraft } from '@/app/actions'
+import { generateTrendImage, updateManualRating } from '@/app/actions'
 import type { Trend } from '@/lib/db'
 
 type TrendWithImage = Trend & { image_url: string | null }
+type ContentTypeId = 'linkedin' | 'ig_carousel' | 'blog' | 'all'
+
+/* ── Studio content type config ────────────────────────────── */
+
+const STUDIO_ITEMS: Array<{
+  id: ContentTypeId
+  label: string
+  color: string
+  loadLabel: string
+}> = [
+  { id: 'linkedin',    label: 'LinkedIn Post',      color: '#f97316', loadLabel: 'Drafting post…'       },
+  { id: 'ig_carousel', label: 'Instagram Carousel', color: '#ec4899', loadLabel: 'Architecting slides…' },
+  { id: 'blog',        label: 'Blog Outline',        color: '#a78bfa', loadLabel: 'Outlining article…'  },
+]
 
 /* ── Helpers ─────────────────────────────────────────────── */
 
@@ -63,18 +86,84 @@ function CopyButton({ text }: { text: string }) {
   )
 }
 
+/* ── Creative Studio Dropdown ────────────────────────────── */
+
+function StudioDropdown({
+  onSelect,
+  savedTypes,
+}: {
+  onSelect: (id: ContentTypeId) => void
+  savedTypes: string[]
+}) {
+  return (
+    <div
+      className="absolute bottom-full right-0 z-30 mb-1.5 w-52 rounded-xl py-1.5"
+      style={{
+        background: 'rgba(12,12,18,0.98)',
+        border: '1px solid rgba(255,255,255,0.09)',
+        boxShadow: '0 16px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03)',
+        animation: 'studioDropIn 0.14s ease-out',
+      }}
+    >
+      <style>{`
+        @keyframes studioDropIn {
+          from { opacity: 0; transform: translateY(4px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0)  scale(1);    }
+        }
+      `}</style>
+
+      <p className="px-3 pb-1 pt-0.5 text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-600">
+        Creative Studio
+      </p>
+
+      {STUDIO_ITEMS.map(({ id, label, color }) => {
+        const saved = savedTypes.includes(id)
+        return (
+          <button
+            key={id}
+            onClick={() => onSelect(id)}
+            className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[11px] transition-colors hover:bg-white/5"
+            style={{ color: saved ? color : '#a1a1aa' }}
+          >
+            <span
+              className="h-1.5 w-1.5 shrink-0 rounded-full"
+              style={{ background: color, opacity: saved ? 1 : 0.4 }}
+            />
+            {label}
+            {saved && <Check className="ml-auto h-2.5 w-2.5" style={{ color }} />}
+          </button>
+        )
+      })}
+
+      <div className="mx-3 my-1 border-t" style={{ borderColor: 'rgba(255,255,255,0.06)' }} />
+
+      <button
+        onClick={() => onSelect('all')}
+        className="flex w-full items-center gap-2.5 px-3 py-2 text-left text-[11px] font-semibold transition-colors hover:bg-white/5"
+        style={{ color: '#e4e4e7' }}
+      >
+        <Sparkles className="h-3 w-3 shrink-0 text-amber-400" />
+        Generate All Assets
+        {savedTypes.length >= 3 && <Check className="ml-auto h-2.5 w-2.5 text-emerald-400" />}
+      </button>
+    </div>
+  )
+}
+
 /* ── Main component ──────────────────────────────────────── */
 
 export function TrendCard({ trend }: { trend: TrendWithImage }) {
   const [summaryOpen, setSummaryOpen] = useState(false)
-  const [draftOpen, setDraftOpen] = useState(false)
-  const [draftContent, setDraftContent] = useState<string | null>(null)
-  const [isDrafting, setIsDrafting] = useState(false)
-  const [draftError, setDraftError] = useState<string | null>(null)
 
   const [imageUrl, setImageUrl] = useState<string | null>(trend.image_url)
   const [isGenerating, setIsGenerating] = useState(false)
   const [imageError, setImageError] = useState<string | null>(null)
+
+  const [studioOpen, setStudioOpen] = useState(false)
+  const [generating, setGenerating] = useState<ContentTypeId | null>(null)
+  const [savedTypes, setSavedTypes] = useState<string[]>([])
+  const [justSaved, setJustSaved] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   const [optimisticRating, setOptimisticRating] = useOptimistic(
     trend.manual_rating ?? 0,
@@ -88,6 +177,18 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
   const formattedDate = new Date(trend.created_at).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric',
   })
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!studioOpen) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setStudioOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [studioOpen])
 
   const vote = (delta: number) => {
     startTransition(async () => {
@@ -105,24 +206,65 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
     else setImageError(result.error ?? 'Failed')
   }
 
-  const handleGenerateDraft = async () => {
-    if (draftContent) { setDraftOpen((o) => !o); return }
-    setIsDrafting(true)
-    setDraftError(null)
-    setDraftOpen(true)
-    const result = await generateLinkedInDraft(
-      trend.id,
-      trend.title,
-      trend.summary ?? trend.title,
-    )
-    setIsDrafting(false)
-    if (result.content) setDraftContent(result.content)
-    else setDraftError(result.error ?? 'Generation failed')
+  const handleStudio = async (contentType: ContentTypeId) => {
+    if (generating) return
+    setGenerating(contentType)
+    setStudioOpen(false)
+    try {
+      const res = await fetch('/api/creative-studio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          trendData: {
+            id: trend.id,
+            title: trend.title,
+            summary: trend.summary,
+            source_url: trend.source_url,
+            score: trend.score,
+          },
+          contentType,
+        }),
+      })
+      if (res.ok) {
+        setSavedTypes((prev) => {
+          const next = new Set(prev)
+          if (contentType === 'all') {
+            next.add('linkedin'); next.add('ig_carousel'); next.add('blog')
+          } else {
+            next.add(contentType)
+          }
+          return [...next]
+        })
+        setJustSaved(true)
+        setTimeout(() => setJustSaved(false), 2200)
+      }
+    } finally {
+      setGenerating(null)
+    }
   }
 
+  // Derive label for the Studio button
+  const studioLabel = (() => {
+    if (justSaved) return '✓ Saved to Vault'
+    if (generating) {
+      return STUDIO_ITEMS.find((t) => t.id === generating)?.loadLabel ?? 'Drafting mix…'
+    }
+    return 'Studio'
+  })()
+
+  const studioColor = justSaved
+    ? '#34d399'
+    : generating
+    ? (STUDIO_ITEMS.find((t) => t.id === generating)?.color ?? '#a78bfa')
+    : studioOpen
+    ? '#c4b5fd'
+    : '#52525b'
+
   return (
+    // overflow-visible lets the Studio dropdown escape the card bounds.
+    // The image container below handles its own overflow-hidden independently.
     <article
-      className={`card-matte noise relative flex flex-col rounded-2xl overflow-hidden ${isElite ? 'elite glow-elite' : ''}`}
+      className={`card-matte noise relative flex flex-col rounded-2xl ${isElite ? 'elite glow-elite' : ''}`}
     >
       {/* Elite shimmer line */}
       {isElite && (
@@ -134,7 +276,7 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
 
       {/* Generated image */}
       {imageUrl && (
-        <div className="relative h-36 w-full overflow-hidden">
+        <div className="relative h-36 w-full overflow-hidden rounded-t-2xl">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
@@ -200,49 +342,15 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
         </div>
       )}
 
-      {/* LinkedIn Draft panel */}
-      {draftOpen && (
-        <div className="mx-4 mb-3 rounded-xl overflow-hidden" style={{ border: '1px solid rgba(99,102,241,0.2)' }}>
-          {/* Panel header */}
-          <div
-            className="flex items-center justify-between px-3 py-2"
-            style={{ background: 'rgba(99,102,241,0.08)', borderBottom: '1px solid rgba(99,102,241,0.12)' }}
-          >
-            <div className="flex items-center gap-1.5">
-              <Pencil className="h-2.5 w-2.5 text-indigo-400" />
-              <span className="text-[10px] font-semibold tracking-wide text-indigo-400">LINKEDIN DRAFT</span>
-            </div>
-            {draftContent && <CopyButton text={draftContent} />}
-          </div>
-
-          {/* Panel body */}
-          <div className="px-3 py-3" style={{ background: 'rgba(99,102,241,0.04)' }}>
-            {isDrafting && (
-              <div className="flex items-center gap-2 py-4 justify-center">
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-indigo-400" />
-                <span className="text-[11px] text-zinc-500">Drafting post…</span>
-              </div>
-            )}
-            {draftError && !isDrafting && (
-              <p className="text-[11px] text-red-400 py-2">{draftError}</p>
-            )}
-            {draftContent && !isDrafting && (
-              <p className="text-[11px] leading-relaxed text-zinc-300 whitespace-pre-wrap">
-                {draftContent}
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* Footer */}
       <div
         className="mt-auto flex items-center justify-between px-4 py-3"
         style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
       >
-        {/* Left: score + links + actions */}
+        {/* Left: score + links + image gen + Creative Studio */}
         <div className="flex items-center gap-2">
           <ScoreBadge score={trend.score} />
+
           {trend.source_url && (
             <a
               href={trend.source_url}
@@ -254,6 +362,7 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
               <ExternalLink className="h-3 w-3" />
             </a>
           )}
+
           {/* Generate image button */}
           {!imageUrl && (
             <button
@@ -267,22 +376,39 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
                 : <ImageIcon className="h-3 w-3" />}
             </button>
           )}
-          {/* LinkedIn draft button */}
-          <button
-            onClick={handleGenerateDraft}
-            disabled={isDrafting}
-            title="Generate LinkedIn draft"
-            className={[
-              'flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium transition-all disabled:opacity-40',
-              draftOpen
-                ? 'text-indigo-400'
-                : 'text-zinc-600 hover:text-indigo-400',
-            ].join(' ')}
-            style={draftOpen ? { background: 'rgba(99,102,241,0.1)' } : {}}
-          >
-            <Pencil className="h-2.5 w-2.5" />
-            <span>Draft</span>
-          </button>
+
+          {/* Creative Studio dropdown trigger */}
+          <div ref={dropdownRef} className="relative">
+            <button
+              onClick={() => { if (!generating) setStudioOpen((o) => !o) }}
+              disabled={!!generating}
+              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium transition-all disabled:cursor-wait"
+              style={{
+                background: studioOpen || generating || justSaved
+                  ? `${studioColor}14`
+                  : 'transparent',
+                border: `1px solid ${studioOpen || generating || justSaved ? `${studioColor}28` : 'transparent'}`,
+                color: studioColor,
+              }}
+            >
+              {generating
+                ? <Loader2 className="h-2.5 w-2.5 animate-spin" />
+                : justSaved
+                ? <Check className="h-2.5 w-2.5" />
+                : <Sparkles className="h-2.5 w-2.5" />}
+              <span>{studioLabel}</span>
+              {!generating && !justSaved && (
+                <ChevronDown
+                  className="h-2.5 w-2.5 transition-transform duration-150"
+                  style={{ transform: studioOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                />
+              )}
+            </button>
+
+            {studioOpen && (
+              <StudioDropdown onSelect={handleStudio} savedTypes={savedTypes} />
+            )}
+          </div>
         </div>
 
         {/* Right: vote controls */}

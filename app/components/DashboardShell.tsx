@@ -3,6 +3,7 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
+  Archive,
   Code2,
   GitBranch,
   Globe,
@@ -17,8 +18,9 @@ import {
 import type { GitHubIntelligence, Target as TargetRow, Trend } from '@/lib/db'
 import { TargetSection } from '@/app/settings/TargetSection'
 import { TrendCard } from './TrendCard'
+import { ContentVaultTab } from './ContentVaultTab'
 
-type ActiveTab = 'overview' | 'github' | 'targets'
+type ActiveTab = 'overview' | 'github' | 'targets' | 'vault'
 
 type TrendWithImage = Trend & { image_url: string | null }
 
@@ -50,6 +52,7 @@ const navItems: Array<{
   { id: 'overview', label: 'Overview', icon: <TrendingUp className="h-4 w-4" /> },
   { id: 'github', label: 'Github Radar', icon: <GitBranch className="h-4 w-4" /> },
   { id: 'targets', label: 'Targets', icon: <Target className="h-4 w-4" /> },
+  { id: 'vault', label: 'Content Vault', icon: <Archive className="h-4 w-4" /> },
 ]
 
 export function DashboardShell({ trends, githubItems, targets }: DashboardShellProps) {
@@ -76,6 +79,7 @@ export function DashboardShell({ trends, githubItems, targets }: DashboardShellP
           {activeTab === 'overview' && <OverviewTab trends={trends} />}
           {activeTab === 'github' && <GitHubRadarTab repos={githubItems} />}
           {activeTab === 'targets' && <TargetsTab targets={targets} />}
+          {activeTab === 'vault' && <ContentVaultTab />}
         </main>
       </div>
     </div>
