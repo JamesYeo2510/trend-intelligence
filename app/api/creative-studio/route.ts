@@ -45,7 +45,9 @@ export async function POST(request: Request) {
 
     await initSchema();
 
-    const sourceId = String(trendData.id ?? trendData.source_url ?? trendData.title);
+    const sourceId = trendData.source_id
+      ? String(trendData.source_id)
+      : String(trendData.id ?? trendData.source_url ?? trendData.title);
     const title = trendData.title;
 
     if (contentType === 'all') {

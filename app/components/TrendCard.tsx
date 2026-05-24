@@ -2,6 +2,7 @@
 
 import { useEffect, useOptimistic, useRef, useState, useTransition } from 'react'
 import {
+  ArrowUp,
   Check,
   ChevronDown,
   ChevronRight,
@@ -9,16 +10,19 @@ import {
   Copy,
   Crown,
   ExternalLink,
+  GitFork,
   Globe,
   ImageIcon,
   Loader2,
+  MessageSquare,
   Sparkles,
+  Star,
   X,
 } from 'lucide-react'
 import { generateTrendImage, updateManualRating } from '@/app/actions'
-import type { Trend } from '@/lib/db'
+import type { TrendAnalysis, UnifiedSignal } from '@/lib/db'
 
-type TrendWithImage = Trend & { image_url: string | null }
+type TrendWithImage = UnifiedSignal
 type ContentTypeId = 'linkedin' | 'ig_carousel' | 'blog' | 'all'
 
 /* ── Studio content type config ────────────────────────────── */
@@ -35,6 +39,15 @@ const STUDIO_ITEMS: Array<{
 ]
 
 /* ── Helpers ─────────────────────────────────────────────── */
+
+function formatMetric(value: number | null | undefined): string {
+  if (value == null) return '-'
+  if (value >= 1000) {
+    const c = value / 1000
+    return `${c >= 10 ? c.toFixed(0) : c.toFixed(1)}k`
+  }
+  return value.toString()
+}
 
 function getSourceInfo(url: string | null): { Icon: typeof Globe; domain: string } {
   if (!url) return { Icon: Globe, domain: 'Unknown' }
@@ -83,6 +96,43 @@ function CopyButton({ text }: { text: string }) {
       {copied ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
       {copied ? 'Copied' : 'Copy'}
     </button>
+  )
+}
+
+/* ── Analysis Block ─────────────────────────────────────── */
+
+const ANALYSIS_FIELDS: Array<{
+  key: keyof TrendAnalysis
+  label: string
+  accent?: boolean
+  italic?: boolean
+}> = [
+  { key: 'why_now',           label: 'WHY NOW',           accent: true },
+  { key: 'who_cares',         label: 'WHO CARES' },
+  { key: 'recommended_move',  label: 'RECOMMENDED MOVE' },
+  { key: 'content_angle',     label: 'CONTENT ANGLE',     italic: true },
+]
+
+function AnalysisBlock({ analysis }: { analysis: TrendAnalysis }) {
+  return (
+    <div
+      className="mt-2 space-y-2.5 rounded-lg px-3 py-2.5"
+      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}
+    >
+      {ANALYSIS_FIELDS.map(({ key, label, accent, italic }) => (
+        <div key={key}>
+          <p
+            className="mb-0.5 text-[8px] font-black tracking-[0.18em]"
+            style={{ color: accent ? '#d97706' : '#52525b' }}
+          >
+            {label}
+          </p>
+          <p className={`text-[11px] leading-relaxed text-zinc-400 ${italic ? 'italic' : ''}`}>
+            {analysis[key]}
+          </p>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -173,6 +223,7 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
 
   const { Icon, domain } = getSourceInfo(trend.source_url)
   const isElite = trend.score !== null && trend.score >= 9
+  const signalType = trend.signal_type ?? 'scraped'
 
   const formattedDate = new Date(trend.created_at).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric',
@@ -217,10 +268,22 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
         body: JSON.stringify({
           trendData: {
             id: trend.id,
+            source_id: trend.source_id,
             title: trend.title,
             summary: trend.summary,
             source_url: trend.source_url,
             score: trend.score,
+            signal_type: signalType,
+            analysis: trend.analysis,
+            // GitHub extras
+            repo_name: trend.repo_name,
+            stars: trend.stars,
+            forks: trend.forks,
+            language: trend.language,
+            // Reddit extras
+            subreddit: trend.subreddit,
+            upvotes: trend.upvotes,
+            num_comments: trend.num_comments,
           },
           contentType,
         }),
@@ -249,6 +312,7 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
     if (generating) {
       return STUDIO_ITEMS.find((t) => t.id === generating)?.loadLabel ?? 'Drafting mix…'
     }
+    if (trend.asset_status != null) return 'Regenerate'
     return 'Studio'
   })()
 
@@ -299,15 +363,41 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
           <span className="text-zinc-700">·</span>
           <span className="shrink-0 text-[11px] text-zinc-600">{formattedDate}</span>
         </div>
-        {isElite && (
-          <span
-            className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black tracking-[0.2em] text-amber-400"
-            style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)' }}
-          >
-            <Crown className="h-2 w-2" strokeWidth={2.5} />
-            ELITE
-          </span>
-        )}
+        <div className="flex shrink-0 items-center gap-1.5">
+          {signalType === 'github' && (
+            <span
+              className="rounded px-1.5 py-0.5 text-[9px] font-bold text-sky-200"
+              style={{ background: 'rgba(125,211,252,0.1)', border: '1px solid rgba(125,211,252,0.2)' }}
+            >
+              GH
+            </span>
+          )}
+          {signalType === 'reddit' && (
+            <span
+              className="rounded px-1.5 py-0.5 text-[9px] font-bold"
+              style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.22)', color: '#fb923c' }}
+            >
+              r/
+            </span>
+          )}
+          {isElite && (
+            <span
+              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black tracking-[0.2em] text-amber-400"
+              style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.2)' }}
+            >
+              <Crown className="h-2 w-2" strokeWidth={2.5} />
+              ELITE
+            </span>
+          )}
+          {trend.asset_status === 'published' && (
+            <span
+              className="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold"
+              style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.22)', color: '#34d399' }}
+            >
+              ✓ Posted
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Title */}
@@ -317,8 +407,8 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
         </h2>
       </div>
 
-      {/* Expandable summary */}
-      {trend.summary && (
+      {/* Expandable summary + optional intelligence block */}
+      {(trend.analysis || trend.summary) && (
         <div className="px-4 pb-2">
           <button
             onClick={() => setSummaryOpen((o) => !o)}
@@ -329,15 +419,78 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
               style={{ transform: summaryOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
               strokeWidth={2.5}
             />
-            {summaryOpen ? 'Hide summary' : 'Summary'}
+            {summaryOpen
+              ? (trend.analysis ? 'Hide intel' : 'Hide summary')
+              : (trend.analysis ? 'Intel' : 'Summary')}
           </button>
           {summaryOpen && (
-            <p
-              className="mt-2 text-[11px] leading-relaxed text-zinc-500 rounded-lg px-3 py-2"
-              style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
-            >
-              {trend.summary}
-            </p>
+            <>
+              {trend.summary && (
+                <p
+                  className="mt-2 text-[11px] leading-relaxed text-zinc-500 rounded-lg px-3 py-2"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                >
+                  {trend.summary}
+                </p>
+              )}
+              {trend.analysis && <AnalysisBlock analysis={trend.analysis} />}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Signal metrics row */}
+      {signalType !== 'scraped' && (
+        <div
+          className="mx-4 mb-3 flex items-center gap-3 rounded-lg px-3 py-2"
+          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+        >
+          {signalType === 'github' && (
+            <>
+              {trend.stars != null && (
+                <span className="flex items-center gap-1 text-[11px] font-semibold tabular-nums text-sky-300">
+                  <Star className="h-3 w-3" strokeWidth={2} />
+                  {formatMetric(trend.stars)}
+                </span>
+              )}
+              {trend.forks != null && (
+                <span className="flex items-center gap-1 text-[11px] tabular-nums text-slate-500">
+                  <GitFork className="h-3 w-3" strokeWidth={2} />
+                  {formatMetric(trend.forks)}
+                </span>
+              )}
+              {trend.language && (
+                <span
+                  className="ml-auto rounded px-1.5 py-0.5 text-[9px] font-semibold text-slate-400"
+                  style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)' }}
+                >
+                  {trend.language}
+                </span>
+              )}
+              {trend.repo_name && (
+                <span className="ml-auto truncate text-[10px] text-slate-600">{trend.repo_name}</span>
+              )}
+            </>
+          )}
+          {signalType === 'reddit' && (
+            <>
+              <span className="flex items-center gap-1 text-[11px] font-semibold tabular-nums text-orange-400">
+                <ArrowUp className="h-3 w-3" strokeWidth={2} />
+                {formatMetric(trend.upvotes ?? trend.score)}
+              </span>
+              <span className="flex items-center gap-1 text-[11px] tabular-nums text-slate-500">
+                <MessageSquare className="h-3 w-3" strokeWidth={2} />
+                {formatMetric(trend.num_comments)}
+              </span>
+              {trend.subreddit && (
+                <span
+                  className="ml-auto rounded px-1.5 py-0.5 text-[9px] font-bold"
+                  style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.2)', color: '#fb923c' }}
+                >
+                  r/{trend.subreddit}
+                </span>
+              )}
+            </>
           )}
         </div>
       )}
@@ -411,34 +564,36 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
           </div>
         </div>
 
-        {/* Right: vote controls */}
-        <div className="flex items-center gap-0.5">
-          <button
-            onClick={() => vote(-1)}
-            disabled={isPending}
-            aria-label="Downvote"
-            className="flex h-6 w-6 items-center justify-center rounded-md text-zinc-600 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-30"
-          >
-            <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.5} />
-          </button>
-          <span
-            className={[
-              'w-7 text-center text-[11px] font-bold tabular-nums',
-              optimisticRating > 0 ? 'text-emerald-400' :
-              optimisticRating < 0 ? 'text-red-400' : 'text-zinc-700',
-            ].join(' ')}
-          >
-            {optimisticRating > 0 ? `+${optimisticRating}` : optimisticRating}
-          </span>
-          <button
-            onClick={() => vote(1)}
-            disabled={isPending}
-            aria-label="Upvote"
-            className="flex h-6 w-6 items-center justify-center rounded-md text-zinc-600 hover:text-emerald-400 hover:bg-emerald-400/10 transition-colors disabled:opacity-30"
-          >
-            <ChevronUp className="h-3.5 w-3.5" strokeWidth={2.5} />
-          </button>
-        </div>
+        {/* Right: vote controls — only for scraped trends (not github/reddit radar) */}
+        {signalType === 'scraped' && (
+          <div className="flex items-center gap-0.5">
+            <button
+              onClick={() => vote(-1)}
+              disabled={isPending}
+              aria-label="Downvote"
+              className="flex h-6 w-6 items-center justify-center rounded-md text-zinc-600 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-30"
+            >
+              <ChevronDown className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </button>
+            <span
+              className={[
+                'w-7 text-center text-[11px] font-bold tabular-nums',
+                optimisticRating > 0 ? 'text-emerald-400' :
+                optimisticRating < 0 ? 'text-red-400' : 'text-zinc-700',
+              ].join(' ')}
+            >
+              {optimisticRating > 0 ? `+${optimisticRating}` : optimisticRating}
+            </span>
+            <button
+              onClick={() => vote(1)}
+              disabled={isPending}
+              aria-label="Upvote"
+              className="flex h-6 w-6 items-center justify-center rounded-md text-zinc-600 hover:text-emerald-400 hover:bg-emerald-400/10 transition-colors disabled:opacity-30"
+            >
+              <ChevronUp className="h-3.5 w-3.5" strokeWidth={2.5} />
+            </button>
+          </div>
+        )}
       </div>
     </article>
   )

@@ -1,28 +1,32 @@
 'use client'
 
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import Link from 'next/link'
 import {
   Archive,
+  ArrowUp,
   Code2,
   GitBranch,
   Globe,
   Layers,
+  Loader2,
+  MessageSquare,
   Pencil,
   Settings,
   Star,
   Target,
   TrendingUp,
   X,
+  Zap,
 } from 'lucide-react'
-import type { GitHubIntelligence, Target as TargetRow, Trend } from '@/lib/db'
+import type { GitHubIntelligence, RedditIntelligence, Target as TargetRow, UnifiedSignal } from '@/lib/db'
 import { TargetSection } from '@/app/settings/TargetSection'
 import { TrendCard } from './TrendCard'
 import { ContentVaultTab } from './ContentVaultTab'
 
-type ActiveTab = 'overview' | 'github' | 'targets' | 'vault'
+type ActiveTab = 'overview' | 'github' | 'reddit' | 'targets' | 'vault' | 'radar'
 
-type TrendWithImage = Trend & { image_url: string | null }
+type TrendWithImage = UnifiedSignal
 
 export type GitHubRadarItem = Pick<
   GitHubIntelligence,
@@ -38,9 +42,24 @@ export type GitHubRadarItem = Pick<
   | 'scraped_at'
 >
 
+export type RedditRadarItem = Pick<
+  RedditIntelligence,
+  | 'id'
+  | 'post_id'
+  | 'subreddit'
+  | 'title'
+  | 'description'
+  | 'score'
+  | 'num_comments'
+  | 'permalink'
+  | 'url'
+  | 'scraped_at'
+>
+
 type DashboardShellProps = {
   trends: TrendWithImage[]
   githubItems: GitHubRadarItem[]
+  redditItems: RedditRadarItem[]
   targets: TargetRow[]
 }
 
@@ -51,11 +70,13 @@ const navItems: Array<{
 }> = [
   { id: 'overview', label: 'Overview', icon: <TrendingUp className="h-4 w-4" /> },
   { id: 'github', label: 'Github Radar', icon: <GitBranch className="h-4 w-4" /> },
+  { id: 'reddit', label: 'Reddit Intel', icon: <MessageSquare className="h-4 w-4" /> },
+  { id: 'radar', label: 'Trend Radar', icon: <Zap className="h-4 w-4" /> },
   { id: 'targets', label: 'Targets', icon: <Target className="h-4 w-4" /> },
   { id: 'vault', label: 'Content Vault', icon: <Archive className="h-4 w-4" /> },
 ]
 
-export function DashboardShell({ trends, githubItems, targets }: DashboardShellProps) {
+export function DashboardShell({ trends, githubItems, redditItems, targets }: DashboardShellProps) {
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
 
   const eliteCount = trends.filter((t) => t.score !== null && t.score >= 9).length
@@ -78,6 +99,8 @@ export function DashboardShell({ trends, githubItems, targets }: DashboardShellP
         <main className="mx-auto max-w-7xl px-5 py-10 sm:px-6">
           {activeTab === 'overview' && <OverviewTab trends={trends} />}
           {activeTab === 'github' && <GitHubRadarTab repos={githubItems} />}
+          {activeTab === 'reddit' && <RedditRadarTab posts={redditItems} />}
+          {activeTab === 'radar' && <TrendRadarTab />}
           {activeTab === 'targets' && <TargetsTab targets={targets} />}
           {activeTab === 'vault' && <ContentVaultTab />}
         </main>
@@ -480,6 +503,180 @@ function GitHubListCard({ repo }: { repo: GitHubRadarItem }) {
   )
 }
 
+function RedditRadarTab({ posts }: { posts: RedditRadarItem[] }) {
+  const topPosts = useMemo(
+    () => [...posts].sort((a, b) => (b.score ?? 0) - (a.score ?? 0)).slice(0, 20),
+    [posts],
+  )
+
+  return (
+    <section>
+      <SectionLabel icon={<MessageSquare className="h-3.5 w-3.5 text-orange-400" />} orange>
+        Reddit Intel
+      </SectionLabel>
+
+      <RedditScroller posts={topPosts} />
+
+      <div className="mt-10">
+        <SectionLabel icon={<Layers className="h-3.5 w-3.5 text-zinc-500" />}>
+          All Posts
+        </SectionLabel>
+        {posts.length === 0 ? (
+          <div
+            className="rounded-lg px-4 py-3 text-[12px] text-slate-500"
+            style={{
+              background: 'rgba(15,23,42,0.45)',
+              border: '1px solid rgba(249,115,22,0.08)',
+            }}
+          >
+            No Reddit intelligence data yet. Run{' '}
+            <code className="rounded px-1 text-orange-400/80" style={{ background: 'rgba(249,115,22,0.08)' }}>
+              scripts/scrape-reddit.ps1
+            </code>{' '}
+            to populate.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            {posts.map((post) => (
+              <RedditListCard key={post.id} post={post} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function RedditScroller({ posts }: { posts: RedditRadarItem[] }) {
+  if (posts.length === 0) {
+    return (
+      <div
+        className="rounded-lg px-4 py-3 text-[12px] text-slate-500"
+        style={{
+          background: 'rgba(15,23,42,0.45)',
+          border: '1px solid rgba(249,115,22,0.08)',
+        }}
+      >
+        No Reddit radar data yet.
+      </div>
+    )
+  }
+
+  return (
+    <div className="-mx-5 overflow-x-auto px-5 pb-2 sm:-mx-6 sm:px-6">
+      <div className="flex min-w-max gap-3">
+        {posts.map((post) => (
+          <RedditMiniCard key={post.id} post={post} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function RedditMiniCard({ post }: { post: RedditRadarItem }) {
+  return (
+    <article
+      className="w-72 shrink-0 rounded-lg px-4 py-3"
+      style={{
+        background: 'linear-gradient(180deg, rgba(20,12,6,0.96), rgba(15,8,4,0.99))',
+        border: '1px solid rgba(249,115,22,0.18)',
+        boxShadow: '0 14px 34px rgba(2,6,23,0.24)',
+      }}
+    >
+      <div className="mb-2 flex items-center gap-2">
+        <SubredditBadge subreddit={post.subreddit} />
+      </div>
+
+      {post.url ? (
+        <a
+          href={post.url}
+          target="_blank"
+          rel="noreferrer"
+          className="mb-3 line-clamp-2 block text-[13px] font-semibold leading-snug text-slate-100 transition-colors hover:text-orange-300"
+        >
+          {post.title}
+        </a>
+      ) : (
+        <p className="mb-3 line-clamp-2 text-[13px] font-semibold leading-snug text-slate-100">
+          {post.title}
+        </p>
+      )}
+
+      <div className="flex items-center gap-4 text-[11px] text-slate-500">
+        <span className="flex items-center gap-1 text-slate-300">
+          <ArrowUp className="h-3 w-3 text-orange-400" />
+          <span className="font-semibold tabular-nums">{formatCount(post.score)}</span>
+        </span>
+        <span className="flex items-center gap-1">
+          <MessageSquare className="h-3 w-3 text-slate-600" />
+          <span className="tabular-nums">{formatCount(post.num_comments)}</span>
+        </span>
+      </div>
+    </article>
+  )
+}
+
+function RedditListCard({ post }: { post: RedditRadarItem }) {
+  return (
+    <article
+      className="rounded-lg p-4"
+      style={{
+        background: 'rgba(20,12,6,0.42)',
+        border: '1px solid rgba(249,115,22,0.09)',
+      }}
+    >
+      <div className="mb-3 flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          {post.url ? (
+            <a
+              href={post.url}
+              target="_blank"
+              rel="noreferrer"
+              className="truncate text-[13px] font-semibold text-slate-100 transition-colors hover:text-orange-300"
+            >
+              {post.title}
+            </a>
+          ) : (
+            <span className="truncate text-[13px] font-semibold text-slate-100">{post.title}</span>
+          )}
+          <div className="mt-1 flex flex-wrap items-center gap-3 text-[10px] text-slate-600">
+            <span className="flex items-center gap-1 text-slate-400">
+              <ArrowUp className="h-3 w-3 text-orange-400" />
+              {formatCount(post.score)} upvotes
+            </span>
+            <span className="flex items-center gap-1">
+              <MessageSquare className="h-3 w-3" />
+              {formatCount(post.num_comments)} comments
+            </span>
+          </div>
+        </div>
+        <SubredditBadge subreddit={post.subreddit} />
+      </div>
+
+      {post.description && (
+        <p className="line-clamp-2 text-[12px] leading-relaxed text-slate-500">
+          {post.description}
+        </p>
+      )}
+    </article>
+  )
+}
+
+function SubredditBadge({ subreddit }: { subreddit: string }) {
+  return (
+    <span
+      className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold"
+      style={{
+        background: 'rgba(249,115,22,0.12)',
+        border: '1px solid rgba(249,115,22,0.22)',
+        color: '#fb923c',
+      }}
+    >
+      r/{subreddit}
+    </span>
+  )
+}
+
 function AiBadge() {
   return (
     <span
@@ -521,18 +718,28 @@ function SectionLabel({
   children,
   accent,
   blue,
+  orange,
 }: {
   icon: ReactNode
   children: ReactNode
   accent?: boolean
   blue?: boolean
+  orange?: boolean
 }) {
-  const color = blue ? 'text-sky-300/80' : accent ? 'text-amber-400/80' : 'text-zinc-600'
-  const line = blue
+  const color = orange
+    ? 'text-orange-400/80'
+    : blue
+    ? 'text-sky-300/80'
+    : accent
+    ? 'text-amber-400/80'
+    : 'text-zinc-600'
+  const line = orange
+    ? 'rgba(249,115,22,0.14)'
+    : blue
     ? 'rgba(125,211,252,0.14)'
     : accent
-      ? 'rgba(251,191,36,0.12)'
-      : 'rgba(255,255,255,0.04)'
+    ? 'rgba(251,191,36,0.12)'
+    : 'rgba(255,255,255,0.04)'
 
   return (
     <div className="mb-5 flex items-center gap-2">
@@ -580,6 +787,114 @@ function formatStars(value: number | null) {
   }
 
   return value.toString()
+}
+
+function formatCount(value: number | null) {
+  if (value === null) return '-'
+  if (value >= 1000) {
+    const compact = value / 1000
+    return `${compact >= 10 ? compact.toFixed(0) : compact.toFixed(1)}k`
+  }
+
+  return value.toString()
+}
+
+function TrendRadarTab() {
+  const [signals, setSignals] = useState<UnifiedSignal[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    setError(null)
+    fetch('/api/trend-radar')
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json() as Promise<UnifiedSignal[]>
+      })
+      .then((data) => {
+        setSignals(data)
+        setLoading(false)
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Failed to load')
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-40">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-600" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div
+        className="rounded-lg px-4 py-3 text-[12px] text-red-400"
+        style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)' }}
+      >
+        Failed to load Trend Radar: {error}
+      </div>
+    )
+  }
+
+  if (signals.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-40 text-center">
+        <div
+          className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl"
+          style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}
+        >
+          <Zap className="h-7 w-7 text-zinc-600" />
+        </div>
+        <p className="text-sm font-semibold text-zinc-300">No signals yet</p>
+        <p className="mt-1.5 text-xs text-zinc-600">
+          Run the scrapers to populate GitHub and Reddit intelligence
+        </p>
+      </div>
+    )
+  }
+
+  const githubCount = signals.filter((s) => s.signal_type === 'github').length
+  const redditCount = signals.filter((s) => s.signal_type === 'reddit').length
+  const publishedCount = signals.filter((s) => s.asset_status === 'published').length
+
+  return (
+    <section>
+      <div className="mb-5 flex items-center gap-2">
+        <Zap className="h-3.5 w-3.5 text-violet-400" />
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-violet-400/80">
+          Trend Radar
+        </h2>
+        <div className="h-px flex-1" style={{ background: 'rgba(167,139,250,0.14)' }} />
+        <div className="flex items-center gap-3 text-[10px] text-zinc-600">
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-sky-400/60" />
+            {githubCount} GitHub
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="h-1.5 w-1.5 rounded-full bg-orange-400/60" />
+            {redditCount} Reddit
+          </span>
+          {publishedCount > 0 && (
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400/60" />
+              {publishedCount} posted
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        {signals.map((signal) => (
+          <TrendCard key={`${signal.signal_type}-${signal.id}`} trend={signal} />
+        ))}
+      </div>
+    </section>
+  )
 }
 
 function EmptyState() {

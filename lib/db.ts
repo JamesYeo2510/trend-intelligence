@@ -52,6 +52,45 @@ export type ContentVault = {
   created_at: string;
 };
 
+export type RedditIntelligence = {
+  id: number;
+  post_id: string;
+  subreddit: string;
+  title: string;
+  description: string | null;
+  score: number | null;
+  num_comments: number | null;
+  permalink: string | null;
+  url: string | null;
+  scraped_at: string;
+};
+
+export type TrendAnalysis = {
+  why_now: string;
+  who_cares: string;
+  recommended_move: string;
+  content_angle: string;
+};
+
+export type UnifiedSignal = Trend & {
+  signal_type?: 'github' | 'reddit' | 'scraped';
+  source_id?: string | null;
+  // GitHub extras
+  repo_name?: string | null;
+  stars?: number | null;
+  forks?: number | null;
+  language?: string | null;
+  // Reddit extras
+  subreddit?: string | null;
+  upvotes?: number | null;
+  num_comments?: number | null;
+  // AI analysis
+  analysis?: TrendAnalysis | null;
+  // Content vault lifecycle
+  asset_status?: 'draft' | 'published' | null;
+  vault_asset_id?: number | null;
+};
+
 export async function initSchema() {
   await sql`
     CREATE TABLE IF NOT EXISTS trends (
@@ -113,4 +152,25 @@ export async function initSchema() {
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
+  await sql`
+    CREATE TABLE IF NOT EXISTS reddit_intelligence (
+      id SERIAL PRIMARY KEY,
+      post_id TEXT NOT NULL UNIQUE,
+      subreddit TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT,
+      score INTEGER,
+      num_comments INTEGER,
+      permalink TEXT,
+      url TEXT,
+      scraped_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+  // Migration 006: add structured AI analysis column to intelligence tables
+  try {
+    await sql`ALTER TABLE github_intelligence ADD COLUMN IF NOT EXISTS analysis JSONB`;
+    await sql`ALTER TABLE reddit_intelligence ADD COLUMN IF NOT EXISTS analysis JSONB`;
+  } catch {
+    // Columns already exist on this deployment — safe to ignore
+  }
 }
