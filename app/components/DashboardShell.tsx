@@ -84,31 +84,61 @@ function TelemetryBanner() {
       .catch(() => {})
   }, [])
 
+  const signals = data?.total_signals ?? '—'
+  const drafts  = data?.studio_drafts ?? '—'
+  const sync    = data ? `+${data.crossover_pct}%` : '—'
+
   return (
     <div
-      className="border-b px-5 py-3 sm:px-6 lg:px-8"
+      className="w-full border-b px-5 py-5 sm:px-6 lg:px-8"
       style={{
-        background: 'linear-gradient(90deg, rgba(212,175,55,0.04) 0%, rgba(8,8,8,0) 60%)',
-        borderColor: 'rgba(212,175,55,0.12)',
+        background: 'linear-gradient(135deg, #000000 0%, #0a0900 50%, #000000 100%)',
+        borderColor: 'rgba(212,175,55,0.2)',
       }}
     >
-      {/* Gold top rule */}
-      <div className="mb-2.5 h-px w-full" style={{ background: 'linear-gradient(90deg, rgba(212,175,55,0.4), transparent)' }} />
-
-      <div className="flex flex-wrap items-center gap-6">
-        <TelemetryBlock label="TOTAL SIGNALS" value={data?.total_signals ?? '—'} />
-        <div className="h-5 w-px" style={{ background: 'rgba(212,175,55,0.15)' }} />
-        <TelemetryBlock label="STUDIO DRAFTS" value={data?.studio_drafts ?? '—'} />
-        <div className="h-5 w-px" style={{ background: 'rgba(212,175,55,0.15)' }} />
-        <TelemetryBlock
-          label="SYNC RATE"
-          value={data ? `${data.crossover_pct}%` : '—'}
-          hint="vs yesterday"
-        />
+      {/* Terminal header */}
+      <div className="mx-auto mb-4 max-w-7xl">
+        <div
+          className="rounded-lg px-5 py-3 text-center"
+          style={{
+            background: 'rgba(0,0,0,0.6)',
+            border: '1px solid rgba(212,175,55,0.2)',
+            boxShadow: '0 0 20px rgba(212,175,55,0.04), inset 0 1px 0 rgba(212,175,55,0.06)',
+          }}
+        >
+          <p
+            className="font-mono text-[11px] font-bold tracking-[0.28em]"
+            style={{ color: '#d4af37' }}
+          >
+            [ TREND INTELLIGENCE // SIGNAL RADAR // MULTI-CHANNEL CONVERGENCE ENGINE ]
+          </p>
+        </div>
       </div>
 
-      {/* Gold bottom rule */}
-      <div className="mt-2.5 h-px w-full" style={{ background: 'linear-gradient(90deg, rgba(212,175,55,0.15), transparent)' }} />
+      {/* 4-column telemetry grid */}
+      <div className="mx-auto grid max-w-7xl grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { label: 'TOTAL SIGNALS',  value: signals },
+          { label: 'CROSSOVER SYNC', value: sync,   hint: 'vs yesterday' },
+          { label: 'ACTIVE CHANNELS', value: 'GH / RD' },
+          { label: 'AI STUDIO',      value: drafts,  hint: 'drafts' },
+        ].map(({ label, value, hint }) => (
+          <div
+            key={label}
+            className="rounded p-3 text-center font-mono"
+            style={{
+              background: 'rgba(0,0,0,0.5)',
+              border: '1px solid rgba(212,175,55,0.18)',
+            }}
+          >
+            <p className="mb-1 text-[8px] font-black tracking-[0.2em] text-zinc-600">{label}</p>
+            <p className="text-sm font-bold tabular-nums" style={{ color: '#d4af37' }}>
+              {value}
+              {hint && <span className="ml-1 text-[9px] font-normal text-zinc-600">{hint}</span>}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
