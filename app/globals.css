@@ -1,11 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg-base: #0c0c0e;
-  --bg-card: #111114;
-  --bg-card-hover: #16161a;
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-elite: rgba(251, 191, 36, 0.25);
+  --bg-base: #080808;
+  --bg-card: #0e0e0e;
+  --bg-card-hover: #131313;
+  --border-subtle: rgba(212,175,55,0.12);
+  --border-elite: rgba(212,175,55,0.35);
+  --gold: #d4af37;
+  --gold-dim: rgba(212,175,55,0.7);
+  --gold-subtle: rgba(212,175,55,0.1);
 }
 
 @theme inline {
@@ -30,9 +33,16 @@ body {
 }
 .card-matte:hover {
   background: var(--bg-card-hover);
+  border-color: rgba(212,175,55,0.2);
 }
 .card-matte.elite {
   border-color: var(--border-elite);
+}
+
+/* Gold glow card variant */
+.card-gold {
+  border: 1px solid rgba(212,175,55,0.22);
+  box-shadow: 0 0 0 1px rgba(212,175,55,0.06), 0 4px 24px rgba(212,175,55,0.04);
 }
 
 /* Subtle noise texture overlay */
@@ -45,7 +55,7 @@ body {
   border-radius: inherit;
 }
 
-/* Amber glow on elite cards */
+/* Gold glow on elite cards */
 .glow-elite {
-  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.15), 0 4px 24px rgba(251, 191, 36, 0.06);
+  box-shadow: 0 0 0 1px rgba(212,175,55,0.2), 0 4px 24px rgba(212,175,55,0.08);
 }
