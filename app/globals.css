@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --bg-base: #080808;
-  --bg-card: #0e0e0e;
-  --bg-card-hover: #131313;
-  --border-subtle: rgba(212,175,55,0.12);
-  --border-elite: rgba(212,175,55,0.35);
-  --gold: #d4af37;
-  --gold-dim: rgba(212,175,55,0.7);
+  --bg-base: #000000;
+  --bg-card: #0a0a0a;
+  --bg-card-hover: #0f0f0f;
+  --border-subtle: rgba(170,124,17,0.28);
+  --border-elite: rgba(212,175,55,0.5);
+  --gold: #D4AF37;
+  --gold-dim: rgba(212,175,55,0.75);
   --gold-subtle: rgba(212,175,55,0.1);
 }
 
@@ -29,11 +29,13 @@ body {
 .card-matte {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 0 15px rgba(212,175,55,0.02), 0 2px 12px rgba(0,0,0,0.5);
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .card-matte:hover {
   background: var(--bg-card-hover);
-  border-color: rgba(212,175,55,0.2);
+  border-color: rgba(212,175,55,0.55);
+  box-shadow: 0 0 22px rgba(212,175,55,0.07), 0 4px 24px rgba(0,0,0,0.6);
 }
 .card-matte.elite {
   border-color: var(--border-elite);
@@ -41,8 +43,8 @@ body {
 
 /* Gold glow card variant */
 .card-gold {
-  border: 1px solid rgba(212,175,55,0.22);
-  box-shadow: 0 0 0 1px rgba(212,175,55,0.06), 0 4px 24px rgba(212,175,55,0.04);
+  border: 1px solid rgba(212,175,55,0.32);
+  box-shadow: 0 0 12px rgba(212,175,55,0.06);
 }
 
 /* Subtle noise texture overlay */
@@ -50,12 +52,12 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
   pointer-events: none;
   border-radius: inherit;
 }
 
 /* Gold glow on elite cards */
 .glow-elite {
-  box-shadow: 0 0 0 1px rgba(212,175,55,0.2), 0 4px 24px rgba(212,175,55,0.08);
+  box-shadow: 0 0 0 1px rgba(212,175,55,0.28), 0 4px 32px rgba(212,175,55,0.1);
 }
