@@ -15,6 +15,7 @@ import {
   ImageIcon,
   Loader2,
   MessageSquare,
+  Search,
   Sparkles,
   Star,
   X,
@@ -618,17 +619,19 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
               {studioOpen && <StudioDropdown onSelect={handleStudio} savedTypes={savedTypes} />}
             </div>
 
-            {/* Inspect Sources */}
+            {/* Inspect Sources — icon button */}
             <button
               onClick={() => setInspectOpen(true)}
-              className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors hover:brightness-125"
+              title="Inspect Sources"
+              aria-label="Inspect Sources"
+              className="flex h-6 w-6 items-center justify-center rounded transition-all hover:brightness-150"
               style={{
-                color: 'rgba(212,175,55,0.55)',
-                border: '1px solid rgba(212,175,55,0.16)',
+                color: 'rgba(212,175,55,0.5)',
+                border: '1px solid rgba(212,175,55,0.18)',
                 background: 'rgba(212,175,55,0.04)',
               }}
             >
-              [ Inspect ]
+              <Search className="h-3 w-3" />
             </button>
           </div>
 

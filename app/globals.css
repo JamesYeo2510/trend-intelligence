@@ -2,9 +2,9 @@
 
 :root {
   --bg-base: #000000;
-  --bg-card: #0a0a0a;
-  --bg-card-hover: #0f0f0f;
-  --border-subtle: rgba(170,124,17,0.28);
+  --bg-card: #050505;
+  --bg-card-hover: #0a0a0a;
+  --border-subtle: rgba(245,158,11,0.2);
   --border-elite: rgba(212,175,55,0.5);
   --gold: #D4AF37;
   --gold-dim: rgba(212,175,55,0.75);

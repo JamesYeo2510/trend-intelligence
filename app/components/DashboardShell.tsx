@@ -161,7 +161,7 @@ function Sidebar({ activeTab, onChange }: { activeTab: ActiveTab; onChange: (tab
   return (
     <aside
       className="fixed inset-y-0 left-0 z-20 hidden w-56 border-r lg:block"
-      style={{ background: 'rgba(5,5,5,0.96)', borderColor: 'rgba(212,175,55,0.1)' }}
+      style={{ background: 'rgba(3,3,3,0.98)', borderColor: 'rgba(212,175,55,0.12)' }}
     >
       <div className="flex h-full flex-col px-6 pt-32">
         <nav className="space-y-6">
@@ -202,6 +202,20 @@ function Sidebar({ activeTab, onChange }: { activeTab: ActiveTab; onChange: (tab
               </button>
             )
           })}
+          {/* Settings — separate route link, always at bottom */}
+          <div className="mt-6 border-t pt-6" style={{ borderColor: 'rgba(212,175,55,0.08)' }}>
+            <Link
+              href="/settings"
+              className="relative flex h-12 w-full items-center gap-3 rounded-md px-3 text-left text-zinc-700 transition-colors hover:text-zinc-400"
+            >
+              <span className="relative z-10 flex items-center gap-3">
+                <Settings className="h-4 w-4" />
+                <span className="whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.16em]">
+                  Settings
+                </span>
+              </span>
+            </Link>
+          </div>
         </nav>
       </div>
     </aside>
