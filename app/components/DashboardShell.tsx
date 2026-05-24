@@ -48,48 +48,18 @@ function GeometricBackground() {
         inset: 0,
         pointerEvents: 'none',
         zIndex: 0,
-        maskImage: 'radial-gradient(ellipse 72% 72% at 50% 46%, black 15%, rgba(0,0,0,0.6) 45%, transparent 78%)',
-        WebkitMaskImage: 'radial-gradient(ellipse 72% 72% at 50% 46%, black 15%, rgba(0,0,0,0.6) 45%, transparent 78%)',
+        opacity: 0.12,
+        backgroundImage: [
+          'linear-gradient(to right, #AA7C11 1px, transparent 1px)',
+          'linear-gradient(to bottom, #AA7C11 1px, transparent 1px)',
+          'linear-gradient(45deg, #AA7C11 0.5px, transparent 0.5px)',
+          'linear-gradient(-45deg, #AA7C11 0.5px, transparent 0.5px)',
+        ].join(', '),
+        backgroundSize: '120px 120px, 120px 120px, 60px 60px, 60px 60px',
+        maskImage: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 90%)',
+        WebkitMaskImage: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 90%)',
       }}
-    >
-      <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="geo-net" x="0" y="0" width="160" height="160" patternUnits="userSpaceOnUse">
-            <g stroke="#AA7C11" fill="#AA7C11">
-              {/* Outer grid frame lines */}
-              <line x1="0"   y1="0"   x2="160" y2="0"   strokeWidth="0.4" strokeOpacity="0.18" />
-              <line x1="0"   y1="0"   x2="0"   y2="160" strokeWidth="0.4" strokeOpacity="0.18" />
-              {/* Mid-axis faint lines */}
-              <line x1="0"   y1="80"  x2="160" y2="80"  strokeWidth="0.3" strokeOpacity="0.1" />
-              <line x1="80"  y1="0"   x2="80"  y2="160" strokeWidth="0.3" strokeOpacity="0.1" />
-              {/* Diagonal network spokes to center node */}
-              <line x1="0"   y1="0"   x2="80"  y2="80"  strokeWidth="0.5" strokeOpacity="0.17" />
-              <line x1="160" y1="0"   x2="80"  y2="80"  strokeWidth="0.5" strokeOpacity="0.17" />
-              <line x1="0"   y1="160" x2="80"  y2="80"  strokeWidth="0.5" strokeOpacity="0.17" />
-              <line x1="160" y1="160" x2="80"  y2="80"  strokeWidth="0.5" strokeOpacity="0.17" />
-              {/* Cardinal spokes to center */}
-              <line x1="80"  y1="0"   x2="80"  y2="80"  strokeWidth="0.4" strokeOpacity="0.13" />
-              <line x1="0"   y1="80"  x2="80"  y2="80"  strokeWidth="0.4" strokeOpacity="0.13" />
-              <line x1="160" y1="80"  x2="80"  y2="80"  strokeWidth="0.4" strokeOpacity="0.13" />
-              <line x1="80"  y1="160" x2="80"  y2="80"  strokeWidth="0.4" strokeOpacity="0.13" />
-              {/* Corner nodes */}
-              <circle cx="0"   cy="0"   r="2.8" fillOpacity="0.2" strokeWidth="0" />
-              <circle cx="160" cy="0"   r="2.8" fillOpacity="0.2" strokeWidth="0" />
-              <circle cx="0"   cy="160" r="2.8" fillOpacity="0.2" strokeWidth="0" />
-              <circle cx="160" cy="160" r="2.8" fillOpacity="0.2" strokeWidth="0" />
-              {/* Center node */}
-              <circle cx="80"  cy="80"  r="2.2" fillOpacity="0.22" strokeWidth="0" />
-              {/* Edge mid-nodes */}
-              <circle cx="80"  cy="0"   r="1.4" fillOpacity="0.15" strokeWidth="0" />
-              <circle cx="0"   cy="80"  r="1.4" fillOpacity="0.15" strokeWidth="0" />
-              <circle cx="160" cy="80"  r="1.4" fillOpacity="0.15" strokeWidth="0" />
-              <circle cx="80"  cy="160" r="1.4" fillOpacity="0.15" strokeWidth="0" />
-            </g>
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#geo-net)" />
-      </svg>
-    </div>
+    />
   )
 }
 
