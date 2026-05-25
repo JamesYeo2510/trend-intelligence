@@ -48,38 +48,133 @@ function GeometricBackground() {
         inset: 0,
         pointerEvents: 'none',
         zIndex: 0,
-        opacity: 0.38,
-        mixBlendMode: 'screen',
       }}
     >
-      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
-        {/* Structural accent lines aligned to header/sidebar boundaries */}
-        <line x1="0" y1="90" x2="100%" y2="90" stroke="#AA7C11" strokeWidth="0.5" opacity="0.15" />
-        <line x1="260" y1="0" x2="260" y2="100%" stroke="#AA7C11" strokeWidth="0.5" opacity="0.1" />
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="100%"
+        height="100%"
+        viewBox="0 0 1920 900"
+        preserveAspectRatio="xMidYMid slice"
+      >
+        {/* Plexus polygon network — triangulated gold lines */}
+        <g stroke="#C9A840" fill="none" strokeWidth="0.8" opacity="0.42">
+          {/* Left cluster */}
+          <line x1="50"  y1="200" x2="130" y2="80" />
+          <line x1="130" y1="80"  x2="310" y2="190" />
+          <line x1="50"  y1="200" x2="310" y2="190" />
+          <line x1="50"  y1="200" x2="220" y2="340" />
+          <line x1="220" y1="340" x2="310" y2="190" />
+          <line x1="310" y1="190" x2="420" y2="270" />
+          <line x1="220" y1="340" x2="420" y2="270" />
+          <line x1="80"  y1="370" x2="50"  y2="200" />
+          <line x1="80"  y1="370" x2="220" y2="340" />
+          <line x1="170" y1="460" x2="80"  y2="370" />
+          <line x1="170" y1="460" x2="220" y2="340" />
+          <line x1="350" y1="390" x2="170" y2="460" />
+          <line x1="350" y1="390" x2="220" y2="340" />
+          <line x1="350" y1="390" x2="420" y2="270" />
+          {/* Upper center */}
+          <line x1="420" y1="270" x2="510" y2="50" />
+          <line x1="510" y1="50"  x2="620" y2="160" />
+          <line x1="420" y1="270" x2="620" y2="160" />
+          <line x1="620" y1="160" x2="700" y2="80" />
+          <line x1="700" y1="80"  x2="780" y2="240" />
+          <line x1="620" y1="160" x2="780" y2="240" />
+          <line x1="780" y1="240" x2="700" y2="330" />
+          <line x1="620" y1="160" x2="700" y2="330" />
+          <line x1="700" y1="330" x2="580" y2="300" />
+          <line x1="580" y1="300" x2="420" y2="270" />
+          <line x1="580" y1="300" x2="620" y2="160" />
+          {/* Center */}
+          <line x1="780" y1="240" x2="900" y2="160" />
+          <line x1="900" y1="160" x2="980" y2="300" />
+          <line x1="780" y1="240" x2="980" y2="300" />
+          <line x1="700" y1="330" x2="780" y2="450" />
+          <line x1="780" y1="450" x2="980" y2="300" />
+          <line x1="900" y1="160" x2="1080" y2="50" />
+          <line x1="980" y1="300" x2="1080" y2="50" />
+          {/* Upper right cluster */}
+          <line x1="1080" y1="50"  x2="1200" y2="140" />
+          <line x1="1200" y1="140" x2="1300" y2="70" />
+          <line x1="1080" y1="50"  x2="1300" y2="70" />
+          <line x1="1200" y1="140" x2="1380" y2="190" />
+          <line x1="1300" y1="70"  x2="1380" y2="190" />
+          <line x1="1380" y1="190" x2="1460" y2="330" />
+          <line x1="1200" y1="140" x2="1340" y2="360" />
+          <line x1="1340" y1="360" x2="1460" y2="330" />
+          <line x1="1340" y1="360" x2="1380" y2="190" />
+          {/* Right edge */}
+          <line x1="1460" y1="330" x2="1550" y2="120" />
+          <line x1="1550" y1="120" x2="1720" y2="200" />
+          <line x1="1460" y1="330" x2="1720" y2="200" />
+          <line x1="1720" y1="200" x2="1870" y2="90" />
+          <line x1="1550" y1="120" x2="1870" y2="90" />
+          <line x1="1720" y1="200" x2="1900" y2="340" />
+          <line x1="1460" y1="330" x2="1640" y2="410" />
+          <line x1="1640" y1="410" x2="1900" y2="340" />
+          <line x1="1720" y1="200" x2="1640" y2="410" />
+          {/* Lower left */}
+          <line x1="350" y1="390" x2="480" y2="560" />
+          <line x1="480" y1="560" x2="600" y2="620" />
+          <line x1="350" y1="390" x2="600" y2="620" />
+          <line x1="600" y1="620" x2="720" y2="520" />
+          <line x1="480" y1="560" x2="720" y2="520" />
+          <line x1="720" y1="520" x2="840" y2="660" />
+          <line x1="600" y1="620" x2="840" y2="660" />
+          <line x1="840" y1="660" x2="950" y2="560" />
+          <line x1="720" y1="520" x2="950" y2="560" />
+          <line x1="780" y1="450" x2="720" y2="520" />
+          {/* Lower right */}
+          <line x1="1150" y1="520" x2="1300" y2="600" />
+          <line x1="1300" y1="600" x2="1480" y2="540" />
+          <line x1="1150" y1="520" x2="1480" y2="540" />
+          <line x1="1480" y1="540" x2="1600" y2="650" />
+          <line x1="1300" y1="600" x2="1600" y2="650" />
+          <line x1="1340" y1="360" x2="1150" y2="520" />
+          <line x1="1640" y1="410" x2="1480" y2="540" />
+        </g>
 
-        {/* Primary header-cluster sweep paths */}
-        <path d="M150,40 L300,20 L450,55 L600,15 L850,45 L1100,20 L1350,50 L1600,15" stroke="#AA7C11" strokeWidth="0.5" fill="none" opacity="0.4" />
-        <path d="M280,110 L420,70 L650,130 L900,60 L1200,110 L1450,75" stroke="#AA7C11" strokeWidth="0.3" fill="none" opacity="0.3" />
-
-        {/* Cross-webbing connector lines */}
-        <line x1="300" y1="20"  x2="420"  y2="70"  stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
-        <line x1="450" y1="55"  x2="420"  y2="70"  stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
-        <line x1="450" y1="55"  x2="650"  y2="130" stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
-        <line x1="600" y1="15"  x2="650"  y2="130" stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
-        <line x1="850" y1="45"  x2="900"  y2="60"  stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
-        <line x1="1100" y1="20" x2="1200" y2="110" stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
-        <line x1="1350" y1="50" x2="1200" y2="110" stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
-
-        {/* Glowing data nodes at vector junctions */}
-        <circle cx="300"  cy="20"  r="1.5" fill="#D4AF37" />
-        <circle cx="450"  cy="55"  r="2"   fill="#FFD700" opacity="0.8" />
-        <circle cx="420"  cy="70"  r="1.5" fill="#D4AF37" />
-        <circle cx="650"  cy="130" r="1.5" fill="#D4AF37" />
-        <circle cx="850"  cy="45"  r="2"   fill="#D4AF37" />
-        <circle cx="900"  cy="60"  r="1.5" fill="#D4AF37" />
-        <circle cx="1100" cy="20"  r="1.5" fill="#D4AF37" />
-        <circle cx="1200" cy="110" r="2"   fill="#FFD700" opacity="0.8" />
-        <circle cx="1450" cy="75"  r="1.5" fill="#D4AF37" />
+        {/* Nodes at polygon junctions */}
+        <g fill="#D4AF37">
+          <circle cx="50"   cy="200" r="2"   opacity="0.65" />
+          <circle cx="130"  cy="80"  r="2.5" opacity="0.8" />
+          <circle cx="220"  cy="340" r="2"   opacity="0.65" />
+          <circle cx="310"  cy="190" r="2.5" opacity="0.8" />
+          <circle cx="80"   cy="370" r="2"   opacity="0.55" />
+          <circle cx="170"  cy="460" r="2"   opacity="0.55" />
+          <circle cx="350"  cy="390" r="2.5" opacity="0.8" />
+          <circle cx="420"  cy="270" r="2"   opacity="0.65" />
+          <circle cx="510"  cy="50"  r="2.5" opacity="0.85" />
+          <circle cx="580"  cy="300" r="2"   opacity="0.6" />
+          <circle cx="620"  cy="160" r="3"   opacity="0.9" />
+          <circle cx="700"  cy="80"  r="2"   opacity="0.7" />
+          <circle cx="700"  cy="330" r="2"   opacity="0.6" />
+          <circle cx="780"  cy="240" r="2.5" opacity="0.8" />
+          <circle cx="780"  cy="450" r="2"   opacity="0.6" />
+          <circle cx="900"  cy="160" r="2"   opacity="0.65" />
+          <circle cx="980"  cy="300" r="2"   opacity="0.55" />
+          <circle cx="1080" cy="50"  r="3"   opacity="0.9" />
+          <circle cx="1200" cy="140" r="2.5" opacity="0.85" />
+          <circle cx="1300" cy="70"  r="2"   opacity="0.7" />
+          <circle cx="1380" cy="190" r="3"   opacity="0.9" />
+          <circle cx="1460" cy="330" r="2"   opacity="0.65" />
+          <circle cx="1340" cy="360" r="2.5" opacity="0.8" />
+          <circle cx="1550" cy="120" r="2"   opacity="0.65" />
+          <circle cx="1720" cy="200" r="2.5" opacity="0.8" />
+          <circle cx="1870" cy="90"  r="2"   opacity="0.7" />
+          <circle cx="1900" cy="340" r="2"   opacity="0.55" />
+          <circle cx="1640" cy="410" r="2"   opacity="0.6" />
+          <circle cx="480"  cy="560" r="2"   opacity="0.55" />
+          <circle cx="600"  cy="620" r="2.5" opacity="0.75" />
+          <circle cx="720"  cy="520" r="2"   opacity="0.65" />
+          <circle cx="840"  cy="660" r="2"   opacity="0.55" />
+          <circle cx="950"  cy="560" r="2"   opacity="0.55" />
+          <circle cx="1150" cy="520" r="2"   opacity="0.55" />
+          <circle cx="1300" cy="600" r="2.5" opacity="0.75" />
+          <circle cx="1480" cy="540" r="2"   opacity="0.65" />
+          <circle cx="1600" cy="650" r="2"   opacity="0.55" />
+        </g>
       </svg>
     </div>
   )
