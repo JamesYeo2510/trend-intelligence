@@ -48,7 +48,7 @@ function GeometricBackground() {
         inset: 0,
         pointerEvents: 'none',
         zIndex: 0,
-        opacity: 0.22,
+        opacity: 0.38,
         mixBlendMode: 'screen',
       }}
     >
