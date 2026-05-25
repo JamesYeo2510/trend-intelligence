@@ -48,18 +48,40 @@ function GeometricBackground() {
         inset: 0,
         pointerEvents: 'none',
         zIndex: 0,
-        opacity: 0.12,
-        backgroundImage: [
-          'linear-gradient(to right, #AA7C11 1px, transparent 1px)',
-          'linear-gradient(to bottom, #AA7C11 1px, transparent 1px)',
-          'linear-gradient(45deg, #AA7C11 0.5px, transparent 0.5px)',
-          'linear-gradient(-45deg, #AA7C11 0.5px, transparent 0.5px)',
-        ].join(', '),
-        backgroundSize: '120px 120px, 120px 120px, 60px 60px, 60px 60px',
-        maskImage: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 90%)',
-        WebkitMaskImage: 'radial-gradient(circle at 50% 50%, rgba(0,0,0,1) 20%, rgba(0,0,0,0.3) 60%, rgba(0,0,0,0) 90%)',
+        opacity: 0.22,
+        mixBlendMode: 'screen',
       }}
-    />
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+        {/* Structural accent lines aligned to header/sidebar boundaries */}
+        <line x1="0" y1="90" x2="100%" y2="90" stroke="#AA7C11" strokeWidth="0.5" opacity="0.15" />
+        <line x1="260" y1="0" x2="260" y2="100%" stroke="#AA7C11" strokeWidth="0.5" opacity="0.1" />
+
+        {/* Primary header-cluster sweep paths */}
+        <path d="M150,40 L300,20 L450,55 L600,15 L850,45 L1100,20 L1350,50 L1600,15" stroke="#AA7C11" strokeWidth="0.5" fill="none" opacity="0.4" />
+        <path d="M280,110 L420,70 L650,130 L900,60 L1200,110 L1450,75" stroke="#AA7C11" strokeWidth="0.3" fill="none" opacity="0.3" />
+
+        {/* Cross-webbing connector lines */}
+        <line x1="300" y1="20"  x2="420"  y2="70"  stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
+        <line x1="450" y1="55"  x2="420"  y2="70"  stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
+        <line x1="450" y1="55"  x2="650"  y2="130" stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
+        <line x1="600" y1="15"  x2="650"  y2="130" stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
+        <line x1="850" y1="45"  x2="900"  y2="60"  stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
+        <line x1="1100" y1="20" x2="1200" y2="110" stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
+        <line x1="1350" y1="50" x2="1200" y2="110" stroke="#AA7C11" strokeWidth="0.3" opacity="0.25" />
+
+        {/* Glowing data nodes at vector junctions */}
+        <circle cx="300"  cy="20"  r="1.5" fill="#D4AF37" />
+        <circle cx="450"  cy="55"  r="2"   fill="#FFD700" opacity="0.8" />
+        <circle cx="420"  cy="70"  r="1.5" fill="#D4AF37" />
+        <circle cx="650"  cy="130" r="1.5" fill="#D4AF37" />
+        <circle cx="850"  cy="45"  r="2"   fill="#D4AF37" />
+        <circle cx="900"  cy="60"  r="1.5" fill="#D4AF37" />
+        <circle cx="1100" cy="20"  r="1.5" fill="#D4AF37" />
+        <circle cx="1200" cy="110" r="2"   fill="#FFD700" opacity="0.8" />
+        <circle cx="1450" cy="75"  r="1.5" fill="#D4AF37" />
+      </svg>
+    </div>
   )
 }
 
