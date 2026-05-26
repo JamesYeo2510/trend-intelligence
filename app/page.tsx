@@ -17,7 +17,7 @@ export default async function DashboardPage() {
 
   const [{ rows: trends }, { rows: targets }] = await Promise.all([
     sql<TrendWithImage>`
-      SELECT * FROM trends ORDER BY score DESC NULLS LAST, created_at DESC LIMIT 10
+      SELECT * FROM trends ORDER BY created_at DESC LIMIT 20
     `,
     sql<TargetRow>`
       SELECT * FROM targets ORDER BY type, created_at ASC
