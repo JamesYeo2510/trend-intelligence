@@ -54,7 +54,7 @@ function sanitize(value: unknown, maxLen = 300): string {
   return String(value ?? '').replace(/[\x00-\x1f\x7f]/g, ' ').slice(0, maxLen)
 }
 
-function buildContext(row: Record<string, unknown>, signalType: 'github' | 'reddit'): string {
+function buildContext(row: Record<string, unknown>, signalType: 'github' | 'reddit' | 'scraped'): string {
   if (signalType === 'github') {
     return [
       `Repo: ${sanitize(row.name)}`,
@@ -65,19 +65,28 @@ function buildContext(row: Record<string, unknown>, signalType: 'github' | 'redd
       `Period: ${sanitize(row.period) || 'N/A'}`,
     ].join('\n')
   }
+  if (signalType === 'reddit') {
+    return [
+      `Subreddit: r/${sanitize(row.subreddit) || 'unknown'}`,
+      `Title: ${sanitize(row.title)}`,
+      `Score: ${row.score ?? 'N/A'}`,
+      `Comments: ${row.num_comments ?? 'N/A'}`,
+      `Body: ${sanitize(row.description) || '(none)'}`,
+    ].join('\n')
+  }
+  // scraped
   return [
-    `Subreddit: r/${sanitize(row.subreddit) || 'unknown'}`,
     `Title: ${sanitize(row.title)}`,
-    `Score: ${row.score ?? 'N/A'}`,
-    `Comments: ${row.num_comments ?? 'N/A'}`,
-    `Body: ${sanitize(row.description) || '(none)'}`,
+    `Summary: ${sanitize(row.summary) || '(none)'}`,
+    `Source: ${sanitize(row.source_url) || '(none)'}`,
+    `Signal score: ${row.score ?? 'N/A'}/100`,
   ].join('\n')
 }
 
 async function analyzeOne(
   client: Anthropic,
   row: Record<string, unknown>,
-  signalType: 'github' | 'reddit',
+  signalType: 'github' | 'reddit' | 'scraped',
 ): Promise<TrendAnalysis> {
   const context = buildContext(row, signalType)
   const bannedList = BANNED_PHRASES.join(', ')
@@ -123,13 +132,13 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  let signalType: 'github' | 'reddit'
+  let signalType: 'github' | 'reddit' | 'scraped'
   let limit: number
 
   try {
     const body = (await request.json()) as { signal_type?: string; limit?: number }
-    if (body.signal_type !== 'github' && body.signal_type !== 'reddit') {
-      return Response.json({ error: 'signal_type must be "github" or "reddit"' }, { status: 400 })
+    if (body.signal_type !== 'github' && body.signal_type !== 'reddit' && body.signal_type !== 'scraped') {
+      return Response.json({ error: 'signal_type must be "github", "reddit", or "scraped"' }, { status: 400 })
     }
     signalType = body.signal_type
     limit = typeof body.limit === 'number' && body.limit > 0 ? Math.min(body.limit, 20) : 10
@@ -155,12 +164,21 @@ export async function POST(request: Request) {
       LIMIT ${limit}
     `
     rows = result.rows as Array<Record<string, unknown>>
-  } else {
+  } else if (signalType === 'reddit') {
     const result = await sql`
       SELECT id, post_id, subreddit, title, description, score, num_comments
       FROM reddit_intelligence
       WHERE analysis IS NULL
       ORDER BY scraped_at DESC, score DESC NULLS LAST
+      LIMIT ${limit}
+    `
+    rows = result.rows as Array<Record<string, unknown>>
+  } else {
+    const result = await sql`
+      SELECT id, title, summary, source_url, score
+      FROM trends
+      WHERE analysis IS NULL
+      ORDER BY score DESC NULLS LAST, created_at DESC
       LIMIT ${limit}
     `
     rows = result.rows as Array<Record<string, unknown>>
@@ -184,9 +202,15 @@ export async function POST(request: Request) {
           SET analysis = ${JSON.stringify(analysis)}::jsonb
           WHERE id = ${id}
         `
-      } else {
+      } else if (signalType === 'reddit') {
         await sql`
           UPDATE reddit_intelligence
+          SET analysis = ${JSON.stringify(analysis)}::jsonb
+          WHERE id = ${id}
+        `
+      } else {
+        await sql`
+          UPDATE trends
           SET analysis = ${JSON.stringify(analysis)}::jsonb
           WHERE id = ${id}
         `
@@ -209,13 +233,15 @@ export async function GET(request: Request) {
 
   await initSchema()
 
-  const [gh, rd] = await Promise.all([
+  const [gh, rd, sc] = await Promise.all([
     sql`SELECT COUNT(*) AS total, COUNT(analysis) AS analyzed FROM github_intelligence`,
     sql`SELECT COUNT(*) AS total, COUNT(analysis) AS analyzed FROM reddit_intelligence`,
+    sql`SELECT COUNT(*) AS total, COUNT(analysis) AS analyzed FROM trends`,
   ])
 
   return Response.json({
     github: gh.rows[0],
     reddit: rd.rows[0],
+    scraped: sc.rows[0],
   })
 }

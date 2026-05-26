@@ -11,6 +11,7 @@ export type Trend = {
   created_at: string;
   manual_rating: number | null;
   image_url: string | null;
+  analysis?: TrendAnalysis | null;
 };
 
 export type Draft = {
@@ -166,10 +167,11 @@ export async function initSchema() {
       scraped_at TIMESTAMPTZ DEFAULT NOW()
     )
   `;
-  // Migration 006: add structured AI analysis column to intelligence tables
+  // Migrations 006 + 007: add structured AI analysis column to all signal tables
   try {
     await sql`ALTER TABLE github_intelligence ADD COLUMN IF NOT EXISTS analysis JSONB`;
     await sql`ALTER TABLE reddit_intelligence ADD COLUMN IF NOT EXISTS analysis JSONB`;
+    await sql`ALTER TABLE trends ADD COLUMN IF NOT EXISTS analysis JSONB`;
   } catch {
     // Columns already exist on this deployment — safe to ignore
   }
