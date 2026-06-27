@@ -102,7 +102,10 @@ export async function GET() {
       SELECT s.*, v.asset_status, v.vault_asset_id
       FROM unified_signals s
       LEFT JOIN vault_status v ON v.source_id = s.source_id
-      ORDER BY s.created_at DESC, s.primary_metric DESC NULLS LAST
+      ORDER BY
+        (s.analysis IS NOT NULL) DESC,
+        s.created_at DESC,
+        s.primary_metric DESC NULLS LAST
       LIMIT 60
     `
 
