@@ -19,9 +19,7 @@ export default async function DashboardPage() {
     sql<TrendWithImage>`
       SELECT *
       FROM trends
-      ORDER BY
-        (analysis IS NOT NULL) DESC,
-        created_at DESC
+      ORDER BY created_at DESC
       LIMIT 20
     `,
     sql<TargetRow>`
