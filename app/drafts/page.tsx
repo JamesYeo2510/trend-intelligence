@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { sql } from '@/lib/db'
 import type { Draft } from '@/lib/db'
-import { ArrowLeft, Pencil, Copy } from 'lucide-react'
+import { ArrowLeft, Pencil } from 'lucide-react'
 import { CopyDraftButton } from './CopyDraftButton'
 
 export const dynamic = 'force-dynamic'

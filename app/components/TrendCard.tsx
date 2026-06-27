@@ -7,7 +7,6 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
-  Copy,
   Crown,
   ExternalLink,
   GitFork,
@@ -67,51 +66,38 @@ function ScoreBadge({ score }: { score: number | null }) {
   )
 }
 
-function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false)
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-  return (
-    <button
-      onClick={handleCopy}
-      className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-medium transition-colors"
-      style={{
-        background: copied ? 'rgba(52,211,153,0.1)' : 'rgba(255,255,255,0.05)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        color: copied ? '#34d399' : '#71717a',
-      }}
-    >
-      {copied ? <Check className="h-2.5 w-2.5" /> : <Copy className="h-2.5 w-2.5" />}
-      {copied ? 'Copied' : 'Copy'}
-    </button>
-  )
-}
-
 /* ── Analysis Block ─────────────────────────────────────── */
 
 const ANALYSIS_FIELDS: Array<{ key: keyof TrendAnalysis; label: string; accent?: boolean; italic?: boolean }> = [
-  { key: 'why_now',          label: 'WHY NOW',          accent: true },
-  { key: 'who_cares',        label: 'WHO CARES' },
-  { key: 'recommended_move', label: 'RECOMMENDED MOVE' },
-  { key: 'content_angle',    label: 'CONTENT ANGLE',    italic: true },
+  { key: 'why_now',          label: 'Why now',          accent: true },
+  { key: 'who_cares',        label: 'Who cares' },
+  { key: 'recommended_move', label: 'Recommended move' },
+  { key: 'content_angle',    label: 'Content angle',    italic: true },
 ]
 
 function AnalysisBlock({ analysis }: { analysis: TrendAnalysis }) {
   return (
     <div
-      className="mt-2 space-y-2.5 rounded-lg px-3 py-2.5"
-      style={{ background: 'rgba(212,175,55,0.03)', border: '1px solid rgba(212,175,55,0.1)' }}
+      className="mt-2 overflow-hidden rounded-lg"
+      style={{
+        background: 'linear-gradient(180deg, rgba(9,12,18,0.98), rgba(5,7,11,0.98))',
+        border: '1px solid rgba(148,163,184,0.13)',
+        boxShadow: 'inset 2px 0 0 rgba(212,175,55,0.38), 0 12px 28px rgba(0,0,0,0.24)',
+      }}
     >
-      {ANALYSIS_FIELDS.map(({ key, label, accent, italic }) => (
-        <div key={key}>
-          <p className="mb-0.5 text-[8px] font-black tracking-[0.18em]"
-            style={{ color: accent ? '#d4af37' : '#52525b' }}>
+      {ANALYSIS_FIELDS.map(({ key, label, accent, italic }, index) => (
+        <div
+          key={key}
+          className="px-3 py-2.5"
+          style={{ borderTop: index === 0 ? 'none' : '1px solid rgba(148,163,184,0.08)' }}
+        >
+          <p
+            className="mb-1 text-[8px] font-black tracking-[0.18em]"
+            style={{ color: accent ? '#d4af37' : '#94a3b8' }}
+          >
             {label}
           </p>
-          <p className={`text-[11px] leading-relaxed text-zinc-400 ${italic ? 'italic' : ''}`}>
+          <p className={`text-[11px] leading-relaxed text-zinc-300 ${italic ? 'italic text-zinc-400' : ''}`}>
             {analysis[key]}
           </p>
         </div>
@@ -329,6 +315,7 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
   const [generating,   setGenerating]   = useState<ContentTypeId | null>(null)
   const [savedTypes,   setSavedTypes]   = useState<string[]>([])
   const [justSaved,    setJustSaved]    = useState(false)
+  const [assetStatus,  setAssetStatus]  = useState(trend.asset_status ?? null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   const [optimisticRating, setOptimisticRating] = useOptimistic(
@@ -398,6 +385,7 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
         }),
       })
       if (res.ok) {
+        setAssetStatus((current) => current ?? 'draft')
         setSavedTypes((prev) => {
           const next = new Set(prev)
           if (contentType === 'all') { next.add('linkedin'); next.add('ig_carousel'); next.add('blog') }
@@ -415,8 +403,8 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
   const studioLabel = (() => {
     if (justSaved) return '✓ Saved to Vault'
     if (generating) return STUDIO_ITEMS.find((t) => t.id === generating)?.loadLabel ?? 'Drafting mix…'
-    if (trend.asset_status != null) return 'Regenerate'
-    return 'Studio'
+    if (assetStatus === 'draft' || assetStatus === 'published') return 'Regenerate Asset'
+    return 'Generate Asset'
   })()
 
   const studioColor = justSaved ? '#34d399'
@@ -453,18 +441,32 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
             <span className="shrink-0 text-[11px] text-zinc-600">{formattedDate}</span>
           </div>
           <div className="flex shrink-0 items-center gap-1.5">
-            {/* GitHub badge — gold */}
+            {/* GitHub badge */}
             {signalType === 'github' && (
-              <span className="rounded px-1.5 py-0.5 text-[9px] font-bold"
-                style={{ color: '#d4af37', background: 'rgba(212,175,55,0.08)', border: '1px solid rgba(212,175,55,0.22)' }}>
-                GH
+              <span
+                className="rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.08em]"
+                style={{
+                  color: '#93c5fd',
+                  background: 'rgba(15,23,42,0.92)',
+                  border: '1px solid rgba(96,165,250,0.28)',
+                  boxShadow: 'inset 0 0 12px rgba(59,130,246,0.08)',
+                }}
+              >
+                GitHub
               </span>
             )}
-            {/* Reddit badge — orange */}
+            {/* Reddit badge */}
             {signalType === 'reddit' && (
-              <span className="rounded px-1.5 py-0.5 text-[9px] font-bold"
-                style={{ background: 'rgba(249,115,22,0.12)', border: '1px solid rgba(249,115,22,0.22)', color: '#fb923c' }}>
-                r/
+              <span
+                className="rounded px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em]"
+                style={{
+                  background: 'rgba(249,115,22,0.18)',
+                  border: '1px solid rgba(251,146,60,0.48)',
+                  color: '#fdba74',
+                  boxShadow: '0 0 14px rgba(249,115,22,0.12)',
+                }}
+              >
+                Reddit
               </span>
             )}
             {isElite && (
@@ -476,10 +478,17 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
                 ELITE
               </span>
             )}
-            {trend.asset_status === 'published' && (
-              <span className="inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-0.5 text-[9px] font-bold"
-                style={{ background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.22)', color: '#34d399' }}>
-                ✓ Posted
+            {assetStatus === 'published' && (
+              <span
+                className="inline-flex shrink-0 items-center rounded px-2 py-0.5 text-[9px] font-black tracking-[0.06em]"
+                style={{
+                  background: 'rgba(16,185,129,0.14)',
+                  border: '1px solid rgba(52,211,153,0.38)',
+                  color: '#6ee7b7',
+                  boxShadow: '0 0 16px rgba(16,185,129,0.12)',
+                }}
+              >
+                [ ✅ Posted ]
               </span>
             )}
           </div>
@@ -508,13 +517,14 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
             </button>
             {summaryOpen && (
               <>
-                {trend.summary && (
+                {trend.analysis ? (
+                  <AnalysisBlock analysis={trend.analysis} />
+                ) : trend.summary ? (
                   <p className="mt-2 rounded-lg px-3 py-2 text-[11px] leading-relaxed text-zinc-500"
                     style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                     {trend.summary}
                   </p>
-                )}
-                {trend.analysis && <AnalysisBlock analysis={trend.analysis} />}
+                ) : null}
               </>
             )}
           </div>

@@ -287,18 +287,6 @@ function TelemetryBanner() {
   )
 }
 
-function TelemetryBlock({ label, value, hint }: { label: string; value: string | number; hint?: string }) {
-  return (
-    <div className="flex items-baseline gap-2">
-      <span className="text-[8px] font-black tracking-[0.22em] text-zinc-600">{label}</span>
-      <span className="text-sm font-bold tabular-nums" style={{ color: 'var(--gold)' }}>
-        {value}
-      </span>
-      {hint && <span className="text-[9px] text-zinc-700">{hint}</span>}
-    </div>
-  )
-}
-
 /* ── Sidebar ───────────────────────────────────────────────── */
 
 function Sidebar({ activeTab, onChange }: { activeTab: ActiveTab; onChange: (tab: ActiveTab) => void }) {
@@ -466,8 +454,6 @@ function TrendRadarTab() {
   const [error,   setError]   = useState<string | null>(null)
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
     fetch('/api/trend-radar')
       .then((r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`)
