@@ -106,6 +106,48 @@ function AnalysisBlock({ analysis }: { analysis: TrendAnalysis }) {
   )
 }
 
+function getCardAnalysis(trend: TrendWithImage): TrendAnalysis {
+  const signalType = trend.signal_type ?? 'scraped'
+  const summary = trend.summary?.trim()
+  const source = getSourceInfo(trend.source_url).domain
+
+  const fallbackWhyNow =
+    summary ??
+    (signalType === 'github'
+      ? `${trend.title} is gaining developer attention now, with ${formatMetric(trend.stars)} stars signaling active market interest.`
+      : signalType === 'reddit'
+        ? `${trend.title} is generating current community discussion in ${trend.subreddit ? `r/${trend.subreddit}` : 'Reddit'}.`
+        : `${trend.title} is a current signal from ${source} that warrants attention now.`)
+
+  const fallbackWhoCares =
+    signalType === 'github'
+      ? `${trend.language ?? 'Software'} developers, technical founders, and automation teams evaluating tools they can adopt or build on.`
+      : signalType === 'reddit'
+        ? `Builders, operators, and creators tracking real user demand inside ${trend.subreddit ? `r/${trend.subreddit}` : 'this community'}.`
+        : `AI operators, marketers, and founders tracking changes that could affect their products, content, or customer acquisition.`
+
+  const fallbackRecommendedMove =
+    signalType === 'github'
+      ? `Review the repository, validate its maintenance and licensing, then test one workflow against your current stack.`
+      : signalType === 'reddit'
+        ? `Read the strongest comments, identify the repeated pain point, and turn it into a concrete product or content experiment.`
+        : `Open the source, validate the claim against one additional reference, and decide whether it warrants a fast experiment.`
+
+  const fallbackContentAngle =
+    signalType === 'github'
+      ? `Why ${trend.title} is attracting developer attention and what automation teams can do with it now.`
+      : signalType === 'reddit'
+        ? `What the ${trend.subreddit ? `r/${trend.subreddit}` : 'Reddit'} discussion around "${trend.title}" reveals about current user demand.`
+        : `What "${trend.title}" means for AI builders and marketers right now.`
+
+  return {
+    why_now: trend.analysis?.why_now?.trim() || fallbackWhyNow,
+    who_cares: trend.analysis?.who_cares?.trim() || fallbackWhoCares,
+    recommended_move: trend.analysis?.recommended_move?.trim() || fallbackRecommendedMove,
+    content_angle: trend.analysis?.content_angle?.trim() || fallbackContentAngle,
+  }
+}
+
 /* ── Source Inspector Modal ──────────────────────────────── */
 
 function InspectModal({ trend, onClose }: { trend: TrendWithImage; onClose: () => void }) {
@@ -327,6 +369,7 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
   const { Icon, domain } = getSourceInfo(trend.source_url)
   const isElite    = trend.score !== null && trend.score >= 9
   const signalType = trend.signal_type ?? 'scraped'
+  const cardAnalysis = getCardAnalysis(trend)
 
   const formattedDate = new Date(trend.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
@@ -372,7 +415,7 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
             source_url: trend.source_url,
             score: trend.score,
             signal_type: signalType,
-            analysis: trend.analysis,
+            analysis: cardAnalysis,
             repo_name: trend.repo_name,
             stars: trend.stars,
             forks: trend.forks,
@@ -500,35 +543,20 @@ export function TrendCard({ trend }: { trend: TrendWithImage }) {
         </div>
 
         {/* Expandable summary + intelligence block */}
-        {(trend.analysis || trend.summary) && (
-          <div className="px-4 pb-2">
-            <button
-              onClick={() => setSummaryOpen((o) => !o)}
-              className="flex items-center gap-1 text-[11px] text-zinc-600 transition-colors hover:text-zinc-400"
-            >
-              <ChevronRight
-                className="h-3 w-3 transition-transform duration-150"
-                style={{ transform: summaryOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
-                strokeWidth={2.5}
-              />
-              {summaryOpen
-                ? (trend.analysis ? 'Hide intel' : 'Hide summary')
-                : (trend.analysis ? 'Intel' : 'Summary')}
-            </button>
-            {summaryOpen && (
-              <>
-                {trend.analysis ? (
-                  <AnalysisBlock analysis={trend.analysis} />
-                ) : trend.summary ? (
-                  <p className="mt-2 rounded-lg px-3 py-2 text-[11px] leading-relaxed text-zinc-500"
-                    style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                    {trend.summary}
-                  </p>
-                ) : null}
-              </>
-            )}
-          </div>
-        )}
+        <div className="px-4 pb-2">
+          <button
+            onClick={() => setSummaryOpen((o) => !o)}
+            className="flex items-center gap-1 text-[11px] text-zinc-600 transition-colors hover:text-zinc-400"
+          >
+            <ChevronRight
+              className="h-3 w-3 transition-transform duration-150"
+              style={{ transform: summaryOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}
+              strokeWidth={2.5}
+            />
+            {summaryOpen ? 'Hide intel' : 'Intel'}
+          </button>
+          {summaryOpen && <AnalysisBlock analysis={cardAnalysis} />}
+        </div>
 
         {/* Signal metrics row */}
         {signalType !== 'scraped' && (
